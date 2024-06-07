@@ -26,9 +26,24 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // await client.connect();
+    const campCollection = client.db("primeCareDb").collection("camp");
+    const userCollection = client.db("primeCareDb").collection("users");
 
 
 
+    // user related api
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      // insert email if yser doesnt exits:
+      const query = { email: user.email }
+      const existingUser = await userCollection.findOne(query)
+      if (existingUser) {
+        return res.send({ message: "user already exist" })
+      }
+
+      const result = await userCollection.insertOne(user);
+      res.send(result)
+    })
 
 
 
@@ -44,10 +59,10 @@ run().catch(console.dir);
 
 
 
-app.get('/', (req, res)=>{
-    res.send('medical camp is coming')
+app.get('/', (req, res) => {
+  res.send('medical camp is coming')
 })
 
-app.listen(port, () =>{
-    console.log(`Medical camp is coming on port${port}`)
+app.listen(port, () => {
+  console.log(`Medical camp is coming on port${port}`)
 })
