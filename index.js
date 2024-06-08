@@ -42,16 +42,16 @@ async function run() {
 
     // middlewares
     const verifyToken = (req, res, next) => {
-      console.log('inside verify token', req.headers.authorization);
+      // console.log('inside verify token', req.headers.authorization);
       if (!req.headers.authorization) {
-        return res.status(401).send({ message: "forbidden access" })
+        return res.status(401).send({ message: "unauthorized access" })
       }
       const token = req.headers.authorization.split(' ')[1]
 
       // verify token
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-          return res.status(401).send({ message: 'forbidden access' })
+          return res.status(401).send({ message: 'unauthorized access' })
         }
         req.decoded = decoded;
         next()
@@ -92,7 +92,7 @@ async function run() {
     app.get('/user/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'unauthorized access' })
+        return res.status(403).send({ message: 'forbidden access' })
       }
 
       const query = { email: email };
@@ -127,7 +127,7 @@ async function run() {
       res.send(result)
 
     })
-
+ 
 
 
     // await client.db("admin").command({ ping: 1 });
