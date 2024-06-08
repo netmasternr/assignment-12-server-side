@@ -58,6 +58,18 @@ async function run() {
       })
     }
 
+    // use verify organizer after verify token
+    const verifyOrganizer = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      const isOrganizer = user?.role === 'isOrganizer';
+      if (!isOrganizer) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      next();
+    }
+
 
     // user related api
     app.post('/users', async (req, res) => {
@@ -73,21 +85,6 @@ async function run() {
     })
 
 
-    // //make admin for toggle button
-    // app.patch('/users/admin/:id', async (req, res) => {
-    //   const id = req.params.id;
-    //   const filter = { _id: new ObjectId(id) };
-
-    //   const updateDoc = {
-    //     $set: {
-    //       role: 'isOrganizer'
-    //     }
-    //   }
-    //   const result = await userCollection.updateOne(filter, updateDoc)
-    //   res.send(result)
-    // })
-
-
     // admin get
     app.get('/user/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -101,7 +98,7 @@ async function run() {
       if (user) {
         isOrganizer = user?.role === 'isOrganizer'
       }
-      res.send({isOrganizer})
+      res.send({ isOrganizer })
     })
 
 
@@ -127,7 +124,7 @@ async function run() {
       res.send(result)
 
     })
- 
+
 
 
     // await client.db("admin").command({ ping: 1 });
