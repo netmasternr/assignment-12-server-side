@@ -1,8 +1,9 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 
@@ -30,6 +31,33 @@ async function run() {
     const userCollection = client.db("primeCareDb").collection("users");
 
 
+    // jwt related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1h'
+      })
+      res.send({ token });
+    })
+
+    // middlewares
+    const verifyToken = (req, res, next) => {
+      console.log('inside verify token', req.headers.authorization);
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "forbidden access" })
+      }
+      const token = req.headers.authorization.split(' ')[1]
+
+      // verify token
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'forbidden access' })
+        }
+        req.decoded = decoded;
+        next()
+      })
+    }
+
 
     // user related api
     app.post('/users', async (req, res) => {
@@ -40,11 +68,65 @@ async function run() {
       if (existingUser) {
         return res.send({ message: "user already exist" })
       }
-
       const result = await userCollection.insertOne(user);
       res.send(result)
     })
 
+
+    // //make admin for toggle button
+    // app.patch('/users/admin/:id', async (req, res) => {
+    //   const id = req.params.id;
+    //   const filter = { _id: new ObjectId(id) };
+
+    //   const updateDoc = {
+    //     $set: {
+    //       role: 'isOrganizer'
+    //     }
+    //   }
+    //   const result = await userCollection.updateOne(filter, updateDoc)
+    //   res.send(result)
+    // })
+
+
+    // admin get
+    app.get('/user/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'unauthorized access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query)
+      let isOrganizer = false;
+      if (user) {
+        isOrganizer = user?.role === 'isOrganizer'
+      }
+      res.send({isOrganizer})
+    })
+
+
+    // add a camp
+    app.post('/addCamp', async (req, res) => {
+      const item = req.body;
+      const result = await campCollection.insertOne(item)
+      res.send(result)
+    })
+
+    // home card
+    app.get('/addCamp', async (req, res) => {
+      const result = await campCollection.find().toArray()
+      res.send(result)
+
+    })
+
+    // card details
+    app.get('/addCamp/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await campCollection.findOne(query)
+      res.send(result)
+
+    })
 
 
 
