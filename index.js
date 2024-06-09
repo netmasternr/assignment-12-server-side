@@ -126,6 +126,16 @@ async function run() {
     })
 
 
+    // delete
+    app.delete('/addCamp/:id', verifyToken, verifyOrganizer, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await campCollection.deleteOne(query);
+      res.send(result)
+    })
+
+
+
 
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
