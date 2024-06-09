@@ -135,6 +135,32 @@ async function run() {
     })
 
 
+    // for update function get 
+    app.get('/addCamp/update/:id', verifyToken, verifyOrganizer, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await campCollection.findOne(query);
+      res.send(result)
+    })
+
+    // for update function patch
+    app.patch('/addCamp/update/:id', async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          campName: item.campName,
+          dateTime: item.dateTime,
+          location: item.location,
+          healthcareProfessionalName: item.healthcareProfessionalName
+        }
+      }
+      const result = await campCollection.updateOne(filter, updateDoc);
+      res.send(result)
+
+    })
+
 
 
     // await client.db("admin").command({ ping: 1 });
