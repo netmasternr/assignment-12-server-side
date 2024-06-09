@@ -29,6 +29,7 @@ async function run() {
     // await client.connect();
     const campCollection = client.db("primeCareDb").collection("camp");
     const userCollection = client.db("primeCareDb").collection("users");
+    const joinCampCollection = client.db("primeCareDb").collection("joinCamp");
 
 
     // jwt related api
@@ -123,6 +124,13 @@ async function run() {
       const result = await campCollection.findOne(query)
       res.send(result)
 
+    })
+
+    // join camp modal
+    app.post('/joinCamp', async(req, res)=>{
+      const item = req.body;
+      const result = await joinCampCollection.insertOne(item)
+      res.send(result)
     })
 
 
