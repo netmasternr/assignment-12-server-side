@@ -127,9 +127,29 @@ async function run() {
     })
 
     // join camp modal
-    app.post('/joinCamp', async(req, res)=>{
+    app.post('/joinCamp', async (req, res) => {
       const item = req.body;
       const result = await joinCampCollection.insertOne(item)
+      res.send(result)
+    })
+
+
+    // registered manage data
+    app.get('/joinCamp', async (req, res) => {
+      const result = await joinCampCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/joinCamp/MyData/:email', async (req, res) => {
+      const email = req.params.email;
+
+      // if (email !== req.user.email) {
+      //   return res.status(404).send({ message: 'forbidden access' })
+      // }
+    //  console.log(email)
+  
+      const query = { PerticipantEmail: email }
+      const result = await joinCampCollection.find(query).toArray();
       res.send(result)
     })
 
