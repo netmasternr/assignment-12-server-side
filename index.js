@@ -3,6 +3,8 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
@@ -117,6 +119,16 @@ async function run() {
 
     })
 
+    // home card
+    app.get('/addCamp/manage/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { organizerEmail: email };
+
+      const result = await campCollection.find(query).toArray()
+      res.send(result)
+
+    })
+
     // card details
     app.get('/addCamp/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
@@ -135,26 +147,39 @@ async function run() {
 
 
     // registered manage data
-    app.get('/joinCamp', async (req, res) => {
+    app.get('/joinCamp', verifyToken, async (req, res) => {
       const result = await joinCampCollection.find().toArray()
       res.send(result)
     })
 
+    // cancel for registered camp
+    app.delete('/join/delete/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await joinCampCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+    // cancel for manage registered cam by organizer
+    app.delete('/manageRegisteredCamp/:id', verifyToken, verifyOrganizer, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await joinCampCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+    // manage camp fro organizer
     app.get('/joinCamp/MyData/:email', async (req, res) => {
       const email = req.params.email;
-
-      // if (email !== req.user.email) {
-      //   return res.status(404).send({ message: 'forbidden access' })
-      // }
-    //  console.log(email)
-  
       const query = { PerticipantEmail: email }
       const result = await joinCampCollection.find(query).toArray();
       res.send(result)
     })
 
 
-    // delete
+    // delete from manage camp
     app.delete('/addCamp/:id', verifyToken, verifyOrganizer, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
@@ -188,6 +213,26 @@ async function run() {
       res.send(result)
 
     })
+
+
+    // payment intent
+    app.post('/create-payment-intent', async (req, res) => {
+
+      const { campFees } = req.body;
+      const amount = parseInt(campFees * 100);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+
+      })
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
+
 
 
 
