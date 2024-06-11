@@ -219,7 +219,9 @@ async function run() {
     app.post('/create-payment-intent', async (req, res) => {
 
       const { campFees } = req.body;
+      console.log(campFees)
       const amount = parseInt(campFees * 100);
+      // console.log(amount , 'inside intent')
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -227,7 +229,6 @@ async function run() {
         payment_method_types: ['card']
 
       })
-
       res.send({
         clientSecret: paymentIntent.client_secret
       })
