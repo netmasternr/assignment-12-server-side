@@ -34,6 +34,8 @@ async function run() {
     const joinCampCollection = client.db("primeCareDb").collection("joinCamp");
     const paymentsCollection = client.db("primeCareDb").collection("payments");
 
+    const feedbackCollection = client.db("primeCareDb").collection("feedback");
+
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -281,7 +283,7 @@ async function run() {
 
 
 
-    // update for confirm organizer
+    // update for confirm organizer 
     app.patch('/join/confirm/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -307,6 +309,14 @@ async function run() {
         }
       }
       const result = await joinCampCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+
+
+    // feedback collection
+    app.post('/feedback', async (req, res) => {
+      const item = req.body;
+      const result = await feedbackCollection.insertOne(item);
       res.send(result)
     })
 
