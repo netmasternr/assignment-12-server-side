@@ -148,7 +148,6 @@ async function run() {
       const updateDoc = {
         $set: {
           paymentStatus: item.paymentStatus,
-          confirmationStatus: item.confirmationStatus,
         }
       }
 
@@ -245,7 +244,7 @@ async function run() {
     // payment intent
     app.post('/create-payment-intent', async (req, res) => {
       const { campFees } = req.body;
-      console.log(campFees)
+      // console.log(campFees)
       const amount = parseInt(campFees * 100);
       // console.log(amount , 'inside intent')
 
@@ -277,6 +276,37 @@ async function run() {
       }
 
       const result = await paymentsCollection.find(query).toArray();
+      res.send(result)
+    })
+
+
+
+    // update for confirm organizer
+    app.patch('/join/confirm/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          confirmationStatus: 'Confirmed'
+        }
+      }
+      const result = await joinCampCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+
+
+    // update for confirm perticipant registered camp
+    app.patch('/join/pay/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          paymentStatus: 'Paid'
+        }
+      }
+      const result = await joinCampCollection.updateOne(filter, updateDoc);
       res.send(result)
     })
 
