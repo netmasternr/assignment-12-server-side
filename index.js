@@ -32,6 +32,7 @@ async function run() {
     const campCollection = client.db("primeCareDb").collection("camp");
     const userCollection = client.db("primeCareDb").collection("users");
     const joinCampCollection = client.db("primeCareDb").collection("joinCamp");
+    const paymentsCollection = client.db("primeCareDb").collection("payments");
 
 
     // jwt related api
@@ -119,16 +120,6 @@ async function run() {
 
     })
 
-    // home card
-    app.get('/addCamp/manage/:email', async (req, res) => {
-      const email = req.params.email;
-      const query = { organizerEmail: email };
-
-      const result = await campCollection.find(query).toArray()
-      res.send(result)
-
-    })
-
     // card details
     app.get('/addCamp/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
@@ -146,36 +137,35 @@ async function run() {
     })
 
 
-    // registered manage data
-    app.get('/joinCamp', verifyToken, async (req, res) => {
-      const result = await joinCampCollection.find().toArray()
-      res.send(result)
-    })
-
-    // cancel for registered camp
-    app.delete('/join/delete/:id', async (req, res) => {
-      const id = req.params.id
-      const query = { _id: new ObjectId(id) }
-      const result = await joinCampCollection.deleteOne(query);
-      res.send(result);
-    })
-
-
-    // cancel for manage registered cam by organizer
-    app.delete('/manageRegisteredCamp/:id', verifyToken, verifyOrganizer, async (req, res) => {
+    // join camp data update status
+    app.put('/joinCamp/:id', async (req, res) => {
+      const item = req.body;
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
-      const result = await joinCampCollection.deleteOne(query);
-      res.send(result);
+
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          paymentStatus: item.paymentStatus,
+          confirmationStatus: item.confirmationStatus,
+        }
+      }
+
+      const result = await joinCampCollection.updateOne(filter, updateDoc, options)
+
+      res.send(result)
     })
 
 
-    // manage camp fro organizer
-    app.get('/joinCamp/MyData/:email', async (req, res) => {
+    // manage camps for organizer
+    app.get('/addCamp/manage/:email', async (req, res) => {
       const email = req.params.email;
-      const query = { PerticipantEmail: email }
-      const result = await joinCampCollection.find(query).toArray();
+      const query = { organizerEmail: email };
+
+      const result = await campCollection.find(query).toArray()
       res.send(result)
+
     })
 
 
@@ -211,13 +201,49 @@ async function run() {
       }
       const result = await campCollection.updateOne(filter, updateDoc);
       res.send(result)
-
     })
+
+
+
+    // registered manage data
+    app.get('/joinCamp/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { organizerEmail: email }
+      const result = await joinCampCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    // cancel  registered camp fro perticipant
+    app.delete('/join/delete/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await joinCampCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+    // cancel for manage registered cam by organizer
+    app.delete('/manageRegisteredCamp/:id', verifyToken, verifyOrganizer, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await joinCampCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+    // registered camps for perticipant
+    app.get('/joinCamp/MyData/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { PerticipantEmail: email }
+      const result = await joinCampCollection.find(query).toArray();
+      res.send(result)
+    })
+
+
 
 
     // payment intent
     app.post('/create-payment-intent', async (req, res) => {
-
       const { campFees } = req.body;
       console.log(campFees)
       const amount = parseInt(campFees * 100);
@@ -234,6 +260,25 @@ async function run() {
       })
     })
 
+    // payments Info
+    app.post('/payments', async (req, res) => {
+      const payments = req.body;
+      const result = await paymentsCollection.insertOne(payments);
+
+      res.send(result)
+    })
+
+    // payment history
+    app.get('/payments/:email', verifyToken, async (req, res) => {
+      const query = { PerticipantEmail: req.params.email }
+
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+
+      const result = await paymentsCollection.find(query).toArray();
+      res.send(result)
+    })
 
 
 
