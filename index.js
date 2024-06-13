@@ -329,6 +329,26 @@ async function run() {
 
 
 
+    // perticipant count update
+    app.patch('/perticipantCount/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const { participantCount } = req.body;
+      const convert = parseInt(participantCount)
+
+      const updateDoc = {
+        $set: {
+          participantCount: convert + 1
+        }
+      }
+      const result = await campCollection.updateOne(filter, updateDoc)
+
+      res.send(result)
+    })
+
+
+
+
     // feedback collection
     app.post('/feedback', async (req, res) => {
       const item = req.body;
