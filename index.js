@@ -313,11 +313,45 @@ async function run() {
     })
 
 
+    // update for confirm perticipant registered camp
+    app.patch('/paymentHistory/pay/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          confirmationStatus: 'Confirmed'
+        }
+      }
+      const result = await paymentsCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+
+
+
     // feedback collection
     app.post('/feedback', async (req, res) => {
       const item = req.body;
       const result = await feedbackCollection.insertOne(item);
       res.send(result)
+    })
+
+
+    // get feedback data in home
+    app.get('/feedback', async (req, res) => {
+      const result = await feedbackCollection.find().toArray();
+      res.send(result)
+    })
+
+
+    // analytics
+    app.get('/analytics/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { PerticipantEmail: email }
+      const result = await joinCampCollection.find(query).toArray();
+
+      res.send(result)
+
     })
 
 
