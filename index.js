@@ -10,7 +10,16 @@ const port = process.env.PORT || 5000;
 
 
 // middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://assignment-12-8bd27.web.app",
+      "https://assignment-12-8bd27.firebaseapp.com"
+    ],
+    credentials:true
+  })
+);
 app.use(express.json());
 
 
@@ -29,6 +38,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // await client.connect();
+
     const campCollection = client.db("primeCareDb").collection("camp");
     const userCollection = client.db("primeCareDb").collection("users");
     const joinCampCollection = client.db("primeCareDb").collection("joinCamp");
